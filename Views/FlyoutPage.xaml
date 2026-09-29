@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
-    x:Class="TinyConverter.Views.FlyoutPage"
+    x:Class="TrayConverter.Views.FlyoutPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="Transparent">
@@ -22,7 +22,7 @@
                 x:Name="TitleText"
                 VerticalAlignment="Center"
                 Style="{StaticResource SubtitleTextBlockStyle}"
-                Text="Tiny Converter" />
+                Text="Tray Converter" />
             <Button
                 x:Name="FavoritesMenuButton"
                 Grid.Column="1"

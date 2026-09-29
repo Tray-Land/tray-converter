@@ -11,7 +11,7 @@ using Windows.Win32.UI.HiDpi;
 using Windows.Win32.UI.Shell;
 using WinUIEx;
 
-namespace TinyConverter.Services;
+namespace TrayConverter.Services;
 
 /// <summary>
 /// Positions a popup window next to the tray icon, falling back to the taskbar edge or the

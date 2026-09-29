@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Windows.Storage;
 
-namespace TinyConverter.Services;
+namespace TrayConverter.Services;
 
 /// <summary>
 /// Typed wrapper over <see cref="ApplicationData.LocalSettings"/>. Every read falls back to a

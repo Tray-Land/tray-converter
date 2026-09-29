@@ -1,6 +1,6 @@
 using Windows.Networking.Connectivity;
 
-namespace TinyConverter.Services;
+namespace TrayConverter.Services;
 
 /// <summary>Reports whether Windows sees an internet connection, and when network status changes.</summary>
 internal static class ConnectivityService

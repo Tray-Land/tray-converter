@@ -3,7 +3,7 @@ using System.Text;
 using NCalc;
 using UnitsNet;
 
-namespace TinyConverter.Services;
+namespace TrayConverter.Services;
 
 /// <summary>How results are rounded for display.</summary>
 internal enum RoundingMode

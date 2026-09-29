@@ -1,9 +1,9 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using TinyConverter.Services;
+using TrayConverter.Services;
 using Windows.ApplicationModel;
 
-namespace TinyConverter.Views;
+namespace TrayConverter.Views;
 
 /// <summary>Settings shown inside the flyout in place of the converter.</summary>
 public sealed partial class SettingsPage : Page

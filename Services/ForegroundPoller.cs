@@ -1,6 +1,6 @@
 using Microsoft.UI.Dispatching;
 
-namespace TinyConverter.Services;
+namespace TrayConverter.Services;
 
 /// <summary>
 /// Runs a refresh on the UI thread on an interval while something is on screen, and not at all

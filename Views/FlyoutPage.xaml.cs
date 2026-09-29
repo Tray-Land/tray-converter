@@ -3,12 +3,12 @@ using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
-using TinyConverter.Services;
+using TrayConverter.Services;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.UI.ViewManagement;
 
-namespace TinyConverter.Views;
+namespace TrayConverter.Views;
 
 /// <summary>
 /// The converter: quantity, value, from/to units, and a favorites dropdown that jumps straight to a

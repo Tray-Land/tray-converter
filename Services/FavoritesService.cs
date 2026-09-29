@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace TinyConverter.Services;
+namespace TrayConverter.Services;
 
 /// <summary>A saved conversion. Units are stored by UnitsNet enum name so the list survives upgrades.</summary>
 internal sealed record Favorite(string Quantity, string From, string To);

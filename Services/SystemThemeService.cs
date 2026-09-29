@@ -2,7 +2,7 @@ using Microsoft.Win32;
 using Windows.Win32;
 using Windows.Win32.System.Registry;
 
-namespace TinyConverter.Services;
+namespace TrayConverter.Services;
 
 /// <summary>
 /// Reports the Windows (taskbar and Start) theme, which can differ from the app theme, and raises

@@ -1,6 +1,6 @@
 using Microsoft.Windows.ApplicationModel.Resources;
 
-namespace TinyConverter.Services;
+namespace TrayConverter.Services;
 
 /// <summary>
 /// The app's own API keys, compiled into its resources from the gitignored OAuth.resw (copy

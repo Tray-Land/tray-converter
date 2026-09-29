@@ -1,9 +1,9 @@
 {
   "profiles": {
-    "TinyConverter (Package)": {
+    "TrayConverter (Package)": {
       "commandName": "MsixPackage"
     },
-    "TinyConverter (Unpackaged)": {
+    "TrayConverter (Unpackaged)": {
       "commandName": "Project"
     }
   }

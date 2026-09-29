@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Secrets for Tiny Converter. This file is gitignored; OAuth.resw.sample is the committed template.
+  Secrets for Tray Converter. This file is gitignored; OAuth.resw.sample is the committed template.
   Paste the app's own API keys below; read them through Services/Secrets.cs.
 -->
 <root>

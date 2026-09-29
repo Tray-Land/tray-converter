@@ -1,11 +1,11 @@
 using Windows.ApplicationModel;
 
-namespace TinyConverter.Services;
+namespace TrayConverter.Services;
 
 /// <summary>Wraps the MSIX "start with Windows" task declared in Package.appxmanifest.</summary>
 internal static class StartupService
 {
-    private const string TaskId = "TinyConverterStartup";
+    private const string TaskId = "TrayConverterStartup";
 
     /// <summary>Returns the current state, or null when the app runs unpackaged.</summary>
     public static async Task<StartupTaskState?> GetStateAsync()

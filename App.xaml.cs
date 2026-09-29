@@ -1,11 +1,11 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using TinyConverter.Services;
-using TinyConverter.Views;
+using TrayConverter.Services;
+using TrayConverter.Views;
 using WinUIEx;
 
-namespace TinyConverter;
+namespace TrayConverter;
 
 /// <summary>
 /// Tray-only application: no window at launch, just a notification-area icon that toggles the
@@ -13,10 +13,10 @@ namespace TinyConverter;
 /// </summary>
 public partial class App : Application
 {
-    public const string DisplayName = "Tiny Converter";
+    public const string DisplayName = "Tray Converter";
 
-    private const string MutexName = "Local\\TinyConverter_SingleInstance";
-    private const string ShowEventName = "Local\\TinyConverter_ShowFlyout";
+    private const string MutexName = "Local\\TrayConverter_SingleInstance";
+    private const string ShowEventName = "Local\\TrayConverter_ShowFlyout";
     private const int MaxTooltipLength = 127; // NOTIFYICONDATA.szTip limit
 
     // Startup leaves JIT and first-request state behind that the idle app never touches again.
@@ -193,7 +193,7 @@ public partial class App : Application
     {
         try
         {
-            string path = Path.Combine(Path.GetTempPath(), "TinyConverter-crash.log");
+            string path = Path.Combine(Path.GetTempPath(), "TrayConverter-crash.log");
             File.AppendAllText(path, $"[{DateTime.Now:O}] {ex}{Environment.NewLine}");
         }
         catch

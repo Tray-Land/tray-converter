@@ -1,6 +1,6 @@
 using Windows.Security.Credentials;
 
-namespace TinyConverter.Services;
+namespace TrayConverter.Services;
 
 /// <summary>
 /// Stores the user's own credentials (API keys they paste in, OAuth refresh or session tokens) in
@@ -11,7 +11,7 @@ namespace TinyConverter.Services;
 /// </summary>
 internal static class CredentialStore
 {
-    private const string ResourcePrefix = "TinyConverter.";
+    private const string ResourcePrefix = "TrayConverter.";
 
     public static string? Get(string name)
     {
