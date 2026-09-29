@@ -38,7 +38,6 @@ public sealed partial class FlyoutPage : Page, IDisposable
         // Favorites may have been deleted on the settings page.
         _favorites = FavoritesService.Load();
         UpdateFavoriteButton();
-        UpdateFavoritesMenuIcon();
         InputBox.Focus(FocusState.Programmatic);
         InputBox.SelectAll();
     }
@@ -167,10 +166,6 @@ public sealed partial class FlyoutPage : Page, IDisposable
         {
             PlayAddedAnimation();
         }
-        else
-        {
-            UpdateFavoritesMenuIcon();
-        }
     }
 
     /// <summary>
@@ -223,8 +218,6 @@ public sealed partial class FlyoutPage : Page, IDisposable
 
     private void PulseFavoritesButton()
     {
-        UpdateFavoritesMenuIcon();
-
         Visual icon = ElementCompositionPreview.GetElementVisual(FavoritesMenuIcon);
         Compositor compositor = icon.Compositor;
         icon.CenterPoint = new Vector3((float)FavoritesMenuIcon.ActualWidth / 2, (float)FavoritesMenuIcon.ActualHeight / 2, 0);
@@ -242,10 +235,6 @@ public sealed partial class FlyoutPage : Page, IDisposable
         Point p = element.TransformToVisual(layer).TransformPoint(new Point(element.ActualWidth / 2, element.ActualHeight / 2));
         return new Vector3((float)p.X, (float)p.Y, 0);
     }
-
-    /// <summary>A filled star on the header button means there are favorites to open.</summary>
-    private void UpdateFavoritesMenuIcon() =>
-        FavoritesMenuIcon.Glyph = _favorites.Count > 0 ? "" : "";
 
     private void FavoritesMenu_Opening(object? sender, object e)
     {

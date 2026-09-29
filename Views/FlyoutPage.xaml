@@ -29,7 +29,7 @@
                 AutomationProperties.Name="Favorites"
                 Style="{StaticResource FlyoutIconButtonStyle}"
                 ToolTipService.ToolTip="Favorites">
-                <FontIcon x:Name="FavoritesMenuIcon" FontSize="14" Glyph="&#xE734;" />
+                <FontIcon x:Name="FavoritesMenuIcon" FontSize="14" Glyph="&#xE728;" />
                 <Button.Flyout>
                     <MenuFlyout
                         x:Name="FavoritesMenu"
