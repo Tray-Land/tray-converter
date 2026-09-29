@@ -47,6 +47,7 @@ public sealed partial class TrayFlyoutWindow : WindowEx
 
     private readonly HWND _hwnd;
     private readonly FlyoutPage _page = new();
+    private SettingsPage? _settingsPage;
     private readonly ShellBackdrop _backdrop = new();
     private readonly UISettings _uiSettings = new();
     private readonly DispatcherQueueTimer _hideTimer;
@@ -106,6 +107,27 @@ public sealed partial class TrayFlyoutWindow : WindowEx
         _animationTimer.Tick += AnimationTimer_Tick;
     }
 
+    public bool IsPopupVisible => _isPopupVisible;
+
+    public bool IsShowingSettings => PageHost.Content is SettingsPage;
+
+    public void ShowSettingsPage()
+    {
+        _settingsPage ??= new SettingsPage(ShowMainPage);
+        _settingsPage.OnShown();
+        _page.OnHidden();
+        PageHost.Content = _settingsPage;
+    }
+
+    public void ShowMainPage()
+    {
+        PageHost.Content = _page;
+        if (_isPopupVisible)
+        {
+            _page.OnShown();
+        }
+    }
+
     /// <summary>Shows the popup, or hides it if already visible (tray-icon click behavior).</summary>
     public void Toggle()
     {
@@ -120,6 +142,7 @@ public sealed partial class TrayFlyoutWindow : WindowEx
             return;
         }
 
+        ShowMainPage();
         ShowPopup();
     }
 
@@ -143,7 +166,10 @@ public sealed partial class TrayFlyoutWindow : WindowEx
         Activate();
         PInvoke.SetForegroundWindow(_hwnd);
 
-        _page.OnShown();
+        if (!IsShowingSettings)
+        {
+            _page.OnShown();
+        }
     }
 
     public void HidePopup()
@@ -182,6 +208,8 @@ public sealed partial class TrayFlyoutWindow : WindowEx
         _animationTimer.Stop();
         _page.OnHidden();
         _page.Dispose();
+        _settingsPage = null;
+        PageHost.Content = null;
 
         _uiSettings.ColorValuesChanged -= OnColorValuesChanged;
         Activated -= OnWindowActivated;
@@ -363,6 +391,13 @@ public sealed partial class TrayFlyoutWindow : WindowEx
     private void Escape_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         args.Handled = true;
-        HidePopup();
+        if (IsShowingSettings)
+        {
+            ShowMainPage();
+        }
+        else
+        {
+            HidePopup();
+        }
     }
 }

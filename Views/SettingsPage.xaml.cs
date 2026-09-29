@@ -1,27 +1,29 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using TinyConverter.Services;
 using Windows.ApplicationModel;
-using WinUIEx;
 
 namespace TinyConverter.Views;
 
-public sealed partial class SettingsWindow : WindowEx
+/// <summary>Settings shown inside the flyout in place of the converter.</summary>
+public sealed partial class SettingsPage : Page
 {
+    private readonly Action _goBack;
     private bool _loading = true;
 
-    public SettingsWindow()
+    public SettingsPage(Action goBack)
     {
+        _goBack = goBack;
         InitializeComponent();
-        Title = $"{App.DisplayName} Settings";
-        AppTitleBar.Title = Title;
-        ExtendsContentIntoTitleBar = true;
-        SetTitleBar(AppTitleBar);
-        AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
-        WindowPlacementService.CenterOnPrimary(this, 480, 560);
-
         VersionText.Text = $"{App.DisplayName} {GetVersion()}";
+        OnShown();
+    }
+
+    /// <summary>Re-reads startup state; the user may have changed it in Windows Settings.</summary>
+    public void OnShown()
+    {
         _ = LoadStartupStateAsync();
-        _loading = false;
+        BackButton.Focus(FocusState.Programmatic);
     }
 
     private static string GetVersion()
@@ -69,4 +71,6 @@ public sealed partial class SettingsWindow : WindowEx
 
         ShowStartupState(await StartupService.SetEnabledAsync(StartupToggle.IsOn));
     }
+
+    private void BackButton_Click(object sender, RoutedEventArgs e) => _goBack();
 }
