@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TinyConverter (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "TinyConverter (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
