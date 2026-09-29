@@ -5,6 +5,14 @@ using UnitsNet;
 
 namespace TinyConverter.Services;
 
+/// <summary>How results are rounded for display.</summary>
+internal enum RoundingMode
+{
+    Automatic = 0,
+    DecimalPlaces = 1,
+    SignificantFigures = 2,
+}
+
 /// <summary>A unit inside a quantity, e.g. Length / Meter.</summary>
 internal sealed record UnitOption(string Name, string Display, Enum Value)
 {
@@ -106,12 +114,67 @@ internal static class ConversionService
         }
     }
 
-    public static string Format(double value)
+    /// <summary>Digits shown by <see cref="RoundingMode.Automatic"/>.</summary>
+    public const int AutomaticSignificantFigures = 6;
+
+    /// <summary>
+    /// Formats a result. Automatic shows 6 significant figures with trailing zeros trimmed;
+    /// DecimalPlaces shows exactly <paramref name="digits"/> places; SignificantFigures shows
+    /// exactly <paramref name="digits"/> significant figures, keeping trailing zeros because they
+    /// carry meaning. Values too large or small for plain notation switch to scientific.
+    /// </summary>
+    public static string Format(double value, RoundingMode mode = RoundingMode.Automatic, int digits = AutomaticSignificantFigures)
     {
+        digits = Math.Clamp(digits, 1, 15);
+        CultureInfo culture = CultureInfo.CurrentCulture;
+
+        if (value == 0)
+        {
+            return mode == RoundingMode.DecimalPlaces && digits > 0
+                ? 0d.ToString("0." + new string('0', digits), culture)
+                : "0";
+        }
+
         double abs = Math.Abs(value);
-        return abs != 0 && (abs >= 1e12 || abs < 1e-6)
-            ? value.ToString("G8", CultureInfo.CurrentCulture)
-            : value.ToString("#,0.##########", CultureInfo.CurrentCulture);
+        if (mode == RoundingMode.DecimalPlaces)
+        {
+            return abs >= 1e15
+                ? value.ToString("E" + (digits - 1), culture)
+                : Math.Round(value, digits).ToString("#,0." + new string('0', digits), culture);
+        }
+
+        int sig = mode == RoundingMode.Automatic ? AutomaticSignificantFigures : digits;
+        int exponent = (int)Math.Floor(Math.Log10(abs));
+        if (exponent >= 15 || exponent <= -7)
+        {
+            return value.ToString("E" + (sig - 1), culture);
+        }
+
+        double rounded = RoundToSignificant(value, sig, exponent);
+        int roundedExponent = (int)Math.Floor(Math.Log10(Math.Abs(rounded)));
+        if (roundedExponent != exponent)
+        {
+            // 9.9999 rounded to 3 figures became 10.0: it now has one more integer digit.
+            exponent = roundedExponent;
+        }
+
+        int decimals = Math.Max(0, sig - 1 - exponent);
+        char fill = mode == RoundingMode.Automatic ? '#' : '0';
+        string format = decimals == 0 ? "#,0" : "#,0." + new string(fill, decimals);
+        return rounded.ToString(format, culture);
+    }
+
+    private static double RoundToSignificant(double value, int sig, int exponent)
+    {
+        int decimals = sig - 1 - exponent;
+        if (decimals >= 0)
+        {
+            return Math.Round(value, Math.Min(decimals, 15));
+        }
+
+        // More integer digits than significant figures: 123456 to 3 figures is 123000.
+        double scale = Math.Pow(10, -decimals);
+        return Math.Round(value / scale) * scale;
     }
 
     private static List<QuantityOption> BuildCatalog()

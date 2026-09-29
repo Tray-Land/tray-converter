@@ -70,6 +70,41 @@
                         Toggled="StartupToggle_Toggled" />
                 </Grid>
 
+                <Border
+                    Padding="16,12"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                    <StackPanel Spacing="8">
+                        <StackPanel>
+                            <TextBlock Text="Result precision" />
+                            <TextBlock
+                                x:Name="RoundingDescription"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ComboBox
+                            x:Name="RoundingBox"
+                            HorizontalAlignment="Stretch"
+                            AutomationProperties.Name="Result precision"
+                            SelectionChanged="RoundingBox_SelectionChanged">
+                            <ComboBoxItem Content="Automatic" />
+                            <ComboBoxItem Content="Decimal places" />
+                            <ComboBoxItem Content="Significant figures" />
+                        </ComboBox>
+                        <NumberBox
+                            x:Name="DigitsBox"
+                            AutomationProperties.Name="Digits"
+                            Maximum="15"
+                            Minimum="1"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Inline"
+                            ValueChanged="DigitsBox_ValueChanged" />
+                    </StackPanel>
+                </Border>
+
                 <TextBlock
                     Margin="0,20,0,8"
                     Style="{StaticResource BodyStrongTextBlockStyle}"

@@ -37,7 +37,7 @@ public sealed partial class FlyoutPage : Page, IDisposable
     {
         // Favorites may have been deleted on the settings page.
         _favorites = FavoritesService.Load();
-        UpdateFavoriteButton();
+        Recalculate(); // picks up a changed precision setting and refreshes the favorite star
         InputBox.Focus(FocusState.Programmatic);
         InputBox.SelectAll();
     }
@@ -77,7 +77,7 @@ public sealed partial class FlyoutPage : Page, IDisposable
 
         ResultText.Text = ConversionService.ParseInput(InputBox.Text) is { } value
             && ConversionService.TryConvert(value, from, to) is { } result
-                ? ConversionService.Format(result)
+                ? ConversionService.Format(result, SettingsService.Rounding, SettingsService.RoundingDigits)
                 : "--";
 
         if (!_loading)

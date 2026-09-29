@@ -24,8 +24,58 @@ public sealed partial class SettingsPage : Page
     public void OnShown()
     {
         _ = LoadStartupStateAsync();
+        LoadRounding();
         RefreshFavorites();
         BackButton.Focus(FocusState.Programmatic);
+    }
+
+    private void LoadRounding()
+    {
+        _loading = true;
+        RoundingBox.SelectedIndex = (int)SettingsService.Rounding;
+        DigitsBox.Value = SettingsService.RoundingDigits;
+        ShowRoundingState();
+        _loading = false;
+    }
+
+    private void ShowRoundingState()
+    {
+        RoundingMode mode = SettingsService.Rounding;
+        DigitsBox.Visibility = mode == RoundingMode.Automatic ? Visibility.Collapsed : Visibility.Visible;
+        DigitsBox.Header = mode == RoundingMode.SignificantFigures ? "Significant figures" : "Decimal places";
+        RoundingDescription.Text = mode switch
+        {
+            RoundingMode.DecimalPlaces => "Always show the same number of digits after the decimal point.",
+            RoundingMode.SignificantFigures => "Round to a set number of significant figures and keep trailing zeros.",
+            _ => "Shows up to 6 significant figures and trims trailing zeros.",
+        };
+    }
+
+    private void RoundingBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || RoundingBox.SelectedIndex < 0)
+        {
+            return;
+        }
+
+        SettingsService.Rounding = (RoundingMode)RoundingBox.SelectedIndex;
+        ShowRoundingState();
+    }
+
+    private void DigitsBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        if (double.IsNaN(args.NewValue))
+        {
+            sender.Value = SettingsService.RoundingDigits;
+            return;
+        }
+
+        SettingsService.RoundingDigits = (int)args.NewValue;
     }
 
     private void RefreshFavorites()

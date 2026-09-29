@@ -24,6 +24,19 @@ internal static class SettingsService
         set => Set(nameof(HasLaunchedBefore), value);
     }
 
+    public static RoundingMode Rounding
+    {
+        get => Enum.IsDefined((RoundingMode)Get(nameof(Rounding), 0)) ? (RoundingMode)Get(nameof(Rounding), 0) : RoundingMode.Automatic;
+        set => Set(nameof(Rounding), (int)value);
+    }
+
+    /// <summary>Decimal places or significant figures, depending on <see cref="Rounding"/>.</summary>
+    public static int RoundingDigits
+    {
+        get => Math.Clamp(Get(nameof(RoundingDigits), 4), 1, 15);
+        set => Set(nameof(RoundingDigits), Math.Clamp(value, 1, 15));
+    }
+
     public static string? LastQuantity
     {
         get => Get<string?>(nameof(LastQuantity), null);
