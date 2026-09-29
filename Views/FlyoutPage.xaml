@@ -8,7 +8,6 @@
     <Grid Padding="16,12,12,16" RowSpacing="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -17,6 +16,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock
                 x:Name="TitleText"
@@ -24,7 +24,21 @@
                 Style="{StaticResource SubtitleTextBlockStyle}"
                 Text="Tiny Converter" />
             <Button
+                x:Name="FavoritesMenuButton"
                 Grid.Column="1"
+                AutomationProperties.Name="Favorites"
+                Style="{StaticResource FlyoutIconButtonStyle}"
+                ToolTipService.ToolTip="Favorites">
+                <FontIcon x:Name="FavoritesMenuIcon" FontSize="14" Glyph="&#xE734;" />
+                <Button.Flyout>
+                    <MenuFlyout
+                        x:Name="FavoritesMenu"
+                        Opening="FavoritesMenu_Opening"
+                        Placement="BottomEdgeAlignedRight" />
+                </Button.Flyout>
+            </Button>
+            <Button
+                Grid.Column="2"
                 AutomationProperties.Name="Settings"
                 Click="SettingsButton_Click"
                 Style="{StaticResource FlyoutIconButtonStyle}"
@@ -33,53 +47,9 @@
             </Button>
         </Grid>
 
-        <!--  Favorites: click to jump to that conversion  -->
-        <StackPanel x:Name="FavoritesPanel" Grid.Row="1" Spacing="4" Visibility="Collapsed">
-            <TextBlock
-                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                Style="{StaticResource CaptionTextBlockStyle}"
-                Text="Favorites" />
-            <ListView
-                x:Name="FavoritesList"
-                MaxHeight="132"
-                IsItemClickEnabled="True"
-                ItemClick="FavoritesList_ItemClick"
-                SelectionMode="None">
-                <ListView.ItemContainerStyle>
-                    <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
-                        <Setter Property="MinHeight" Value="36" />
-                        <Setter Property="Padding" Value="8,0,0,0" />
-                    </Style>
-                </ListView.ItemContainerStyle>
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="x:String">
-                        <Grid ColumnSpacing="4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="{x:Bind}"
-                                TextTrimming="CharacterEllipsis" />
-                            <Button
-                                Grid.Column="1"
-                                AutomationProperties.Name="Remove favorite"
-                                Click="RemoveFavorite_Click"
-                                Style="{StaticResource FlyoutIconButtonStyle}"
-                                Tag="{x:Bind}"
-                                ToolTipService.ToolTip="Remove favorite">
-                                <FontIcon FontSize="12" Glyph="&#xE711;" />
-                            </Button>
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </StackPanel>
-
         <!--  Converter  -->
         <Border
-            Grid.Row="2"
+            Grid.Row="1"
             Padding="16"
             VerticalAlignment="Top"
             Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -154,5 +124,20 @@
                 </Grid>
             </StackPanel>
         </Border>
+
+        <!--  Overlay for the "added to favorites" flight; never takes input  -->
+        <Canvas
+            Grid.RowSpan="2"
+            Margin="-16,-12,-12,-16"
+            IsHitTestVisible="False">
+            <FontIcon
+                x:Name="FlyStar"
+                Canvas.Left="0"
+                Canvas.Top="0"
+                FontSize="16"
+                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                Glyph="&#xE735;"
+                Opacity="0" />
+        </Canvas>
     </Grid>
 </Page>

@@ -18,4 +18,18 @@ internal static class FavoritesService
 
     public static void Save(List<Favorite> favorites) =>
         SettingsService.SetJson(Key, favorites, FavoritesJsonContext.Default.ListFavorite);
+
+    /// <summary>"Length: Meter (m) → Foot (ft)"</summary>
+    public static string Label(Favorite favorite)
+    {
+        QuantityOption? quantity = ConversionService.FindQuantity(favorite.Quantity);
+        if (quantity is null)
+        {
+            return $"{favorite.Quantity}: {favorite.From} → {favorite.To}";
+        }
+
+        string from = ConversionService.FindUnit(quantity, favorite.From)?.Display ?? favorite.From;
+        string to = ConversionService.FindUnit(quantity, favorite.To)?.Display ?? favorite.To;
+        return $"{quantity.Display}: {from} → {to}";
+    }
 }

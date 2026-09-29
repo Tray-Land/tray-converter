@@ -9,6 +9,7 @@ namespace TinyConverter.Views;
 public sealed partial class SettingsPage : Page
 {
     private readonly Action _goBack;
+    private List<Favorite> _favorites = [];
     private bool _loading = true;
 
     public SettingsPage(Action goBack)
@@ -23,7 +24,30 @@ public sealed partial class SettingsPage : Page
     public void OnShown()
     {
         _ = LoadStartupStateAsync();
+        RefreshFavorites();
         BackButton.Focus(FocusState.Programmatic);
+    }
+
+    private void RefreshFavorites()
+    {
+        _favorites = FavoritesService.Load();
+        FavoritesList.ItemsSource = _favorites.Select(FavoritesService.Label).ToList();
+        NoFavoritesText.Visibility = _favorites.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        FavoritesList.Visibility = _favorites.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void DeleteFavorite_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string label })
+        {
+            int index = FavoritesList.Items.IndexOf(label);
+            if (index >= 0 && index < _favorites.Count)
+            {
+                _favorites.RemoveAt(index);
+                FavoritesService.Save(_favorites);
+                RefreshFavorites();
+            }
+        }
     }
 
     private static string GetVersion()

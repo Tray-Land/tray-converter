@@ -1,17 +1,22 @@
+using System.Numerics;
+using Microsoft.UI.Composition;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Hosting;
 using TinyConverter.Services;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation;
+using Windows.UI.ViewManagement;
 
 namespace TinyConverter.Views;
 
 /// <summary>
-/// The converter: quantity, value, from/to units, and a favorites list that jumps straight to a
+/// The converter: quantity, value, from/to units, and a favorites dropdown that jumps straight to a
 /// saved conversion. Everything is local, so there is nothing to poll while hidden.
 /// </summary>
 public sealed partial class FlyoutPage : Page, IDisposable
 {
-    private readonly List<Favorite> _favorites = FavoritesService.Load();
+    private List<Favorite> _favorites = FavoritesService.Load();
     private bool _loading;
 
     public FlyoutPage()
@@ -24,13 +29,16 @@ public sealed partial class FlyoutPage : Page, IDisposable
         Select(SettingsService.LastQuantity ?? "Length", SettingsService.LastFrom, SettingsService.LastTo);
         _loading = false;
 
-        RefreshFavorites();
         Recalculate();
     }
 
     /// <summary>The flyout opened: ready the input for typing.</summary>
     public void OnShown()
     {
+        // Favorites may have been deleted on the settings page.
+        _favorites = FavoritesService.Load();
+        UpdateFavoriteButton();
+        UpdateFavoritesMenuIcon();
         InputBox.Focus(FocusState.Programmatic);
         InputBox.SelectAll();
     }
@@ -90,29 +98,9 @@ public sealed partial class FlyoutPage : Page, IDisposable
         ToolTipService.SetToolTip(FavoriteButton, isFavorite ? "Remove from favorites" : "Add to favorites");
     }
 
-    private void RefreshFavorites()
-    {
-        FavoritesList.ItemsSource = _favorites.Select(FavoriteLabel).ToList();
-        FavoritesPanel.Visibility = _favorites.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private static string FavoriteLabel(Favorite favorite)
-    {
-        QuantityOption? quantity = ConversionService.FindQuantity(favorite.Quantity);
-        if (quantity is null)
-        {
-            return $"{favorite.Quantity}: {favorite.From} → {favorite.To}";
-        }
-
-        string from = ConversionService.FindUnit(quantity, favorite.From)?.Display ?? favorite.From;
-        string to = ConversionService.FindUnit(quantity, favorite.To)?.Display ?? favorite.To;
-        return $"{quantity.Display}: {from} → {to}";
-    }
-
     private void SaveFavorites()
     {
         FavoritesService.Save(_favorites);
-        RefreshFavorites();
         UpdateFavoriteButton();
     }
 
@@ -168,42 +156,127 @@ public sealed partial class FlyoutPage : Page, IDisposable
             return;
         }
 
-        if (!_favorites.Remove(current))
+        bool added = !_favorites.Remove(current);
+        if (added)
         {
             _favorites.Add(current);
         }
 
         SaveFavorites();
+        if (added)
+        {
+            PlayAddedAnimation();
+        }
+        else
+        {
+            UpdateFavoritesMenuIcon();
+        }
     }
 
-    private void FavoritesList_ItemClick(object sender, ItemClickEventArgs e)
+    /// <summary>
+    /// A star lifts off the result's star button and flies up to the favorites button, which then
+    /// pulses, so it's clear that is where favorites live.
+    /// </summary>
+    private void PlayAddedAnimation()
     {
-        int index = FavoritesList.Items.IndexOf(e.ClickedItem);
-        if (index < 0 || index >= _favorites.Count)
+        if (!new UISettings().AnimationsEnabled || FlyStar.Parent is not UIElement layer)
         {
             return;
         }
 
-        Favorite favorite = _favorites[index];
+        Vector3 start = CenterIn(FavoriteButton, layer);
+        Vector3 end = CenterIn(FavoritesMenuButton, layer);
+        Vector3 half = new((float)FlyStar.ActualWidth / 2, (float)FlyStar.ActualHeight / 2, 0);
+
+        Visual star = ElementCompositionPreview.GetElementVisual(FlyStar);
+        Compositor compositor = star.Compositor;
+        star.CenterPoint = half;
+
+        CubicBezierEasingFunction ease = compositor.CreateCubicBezierEasingFunction(new(0.3f, 0f), new(0.2f, 1f));
+        TimeSpan duration = TimeSpan.FromMilliseconds(600);
+
+        Vector3KeyFrameAnimation offset = compositor.CreateVector3KeyFrameAnimation();
+        offset.Duration = duration;
+        offset.InsertKeyFrame(0f, start - half);
+        offset.InsertKeyFrame(1f, end - half, ease);
+
+        Vector3KeyFrameAnimation scale = compositor.CreateVector3KeyFrameAnimation();
+        scale.Duration = duration;
+        scale.InsertKeyFrame(0f, new Vector3(0.6f));
+        scale.InsertKeyFrame(0.3f, new Vector3(1.7f), ease);
+        scale.InsertKeyFrame(1f, new Vector3(0.9f), ease);
+
+        ScalarKeyFrameAnimation opacity = compositor.CreateScalarKeyFrameAnimation();
+        opacity.Duration = duration;
+        opacity.InsertKeyFrame(0f, 0f);
+        opacity.InsertKeyFrame(0.1f, 1f);
+        opacity.InsertKeyFrame(0.85f, 1f);
+        opacity.InsertKeyFrame(1f, 0f);
+
+        CompositionScopedBatch batch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
+        star.StartAnimation("Offset", offset);
+        star.StartAnimation("Scale", scale);
+        star.StartAnimation("Opacity", opacity);
+        batch.End();
+        batch.Completed += (_, _) => DispatcherQueue.TryEnqueue(PulseFavoritesButton);
+    }
+
+    private void PulseFavoritesButton()
+    {
+        UpdateFavoritesMenuIcon();
+
+        Visual icon = ElementCompositionPreview.GetElementVisual(FavoritesMenuIcon);
+        Compositor compositor = icon.Compositor;
+        icon.CenterPoint = new Vector3((float)FavoritesMenuIcon.ActualWidth / 2, (float)FavoritesMenuIcon.ActualHeight / 2, 0);
+
+        Vector3KeyFrameAnimation pulse = compositor.CreateVector3KeyFrameAnimation();
+        pulse.Duration = TimeSpan.FromMilliseconds(350);
+        pulse.InsertKeyFrame(0f, Vector3.One);
+        pulse.InsertKeyFrame(0.4f, new Vector3(1.5f), compositor.CreateCubicBezierEasingFunction(new(0.2f, 0.8f), new(0.2f, 1f)));
+        pulse.InsertKeyFrame(1f, Vector3.One, compositor.CreateCubicBezierEasingFunction(new(0.3f, 0f), new(0.6f, 1f)));
+        icon.StartAnimation("Scale", pulse);
+    }
+
+    private static Vector3 CenterIn(FrameworkElement element, UIElement layer)
+    {
+        Point p = element.TransformToVisual(layer).TransformPoint(new Point(element.ActualWidth / 2, element.ActualHeight / 2));
+        return new Vector3((float)p.X, (float)p.Y, 0);
+    }
+
+    /// <summary>A filled star on the header button means there are favorites to open.</summary>
+    private void UpdateFavoritesMenuIcon() =>
+        FavoritesMenuIcon.Glyph = _favorites.Count > 0 ? "" : "";
+
+    private void FavoritesMenu_Opening(object? sender, object e)
+    {
+        FavoritesMenu.Items.Clear();
+        if (_favorites.Count == 0)
+        {
+            FavoritesMenu.Items.Add(new MenuFlyoutItem { Text = "No favorites yet", IsEnabled = false });
+            return;
+        }
+
+        foreach (Favorite favorite in _favorites)
+        {
+            var item = new MenuFlyoutItem { Text = FavoritesService.Label(favorite), Tag = favorite };
+            item.Click += FavoriteItem_Click;
+            FavoritesMenu.Items.Add(item);
+        }
+    }
+
+    private void FavoriteItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuFlyoutItem { Tag: Favorite favorite })
+        {
+            return;
+        }
+
         _loading = true;
         Select(favorite.Quantity, favorite.From, favorite.To);
         _loading = false;
         Recalculate();
         InputBox.Focus(FocusState.Programmatic);
         InputBox.SelectAll();
-    }
-
-    private void RemoveFavorite_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button { Tag: string label })
-        {
-            int index = FavoritesList.Items.IndexOf(label);
-            if (index >= 0 && index < _favorites.Count)
-            {
-                _favorites.RemoveAt(index);
-                SaveFavorites();
-            }
-        }
     }
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e) => App.Current.ShowSettings();

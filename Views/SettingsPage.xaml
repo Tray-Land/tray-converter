@@ -71,6 +71,54 @@
                 </Grid>
 
                 <TextBlock
+                    Margin="0,20,0,8"
+                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                    Text="Favorites" />
+                <TextBlock
+                    x:Name="NoFavoritesText"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="No favorites yet. Tap the star next to a result to add one."
+                    TextWrapping="Wrap" />
+                <ListView
+                    x:Name="FavoritesList"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    SelectionMode="None">
+                    <ListView.ItemContainerStyle>
+                        <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
+                            <Setter Property="MinHeight" Value="40" />
+                            <Setter Property="Padding" Value="12,0,4,0" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Grid ColumnSpacing="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Text="{x:Bind}"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTipService.ToolTip="{x:Bind}" />
+                                <Button
+                                    Grid.Column="1"
+                                    AutomationProperties.Name="Delete favorite"
+                                    Click="DeleteFavorite_Click"
+                                    Style="{StaticResource FlyoutIconButtonStyle}"
+                                    Tag="{x:Bind}"
+                                    ToolTipService.ToolTip="Delete favorite">
+                                    <FontIcon FontSize="12" Glyph="&#xE74D;" />
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <TextBlock
                     x:Name="VersionText"
                     Margin="0,16,0,0"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"
