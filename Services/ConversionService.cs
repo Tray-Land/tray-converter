@@ -123,10 +123,15 @@ internal static class ConversionService
     /// exactly <paramref name="digits"/> significant figures, keeping trailing zeros because they
     /// carry meaning. Values too large or small for plain notation switch to scientific.
     /// </summary>
-    public static string Format(double value, RoundingMode mode = RoundingMode.Automatic, int digits = AutomaticSignificantFigures)
+    public static string Format(
+        double value,
+        RoundingMode mode = RoundingMode.Automatic,
+        int digits = AutomaticSignificantFigures,
+        bool grouping = true)
     {
         digits = Math.Clamp(digits, 1, 15);
         CultureInfo culture = CultureInfo.CurrentCulture;
+        string integerPart = grouping ? "#,0" : "0";
 
         if (value == 0)
         {
@@ -140,7 +145,7 @@ internal static class ConversionService
         {
             return abs >= 1e15
                 ? value.ToString("E" + (digits - 1), culture)
-                : Math.Round(value, digits).ToString("#,0." + new string('0', digits), culture);
+                : Math.Round(value, digits).ToString(integerPart + "." + new string('0', digits), culture);
         }
 
         int sig = mode == RoundingMode.Automatic ? AutomaticSignificantFigures : digits;
@@ -160,7 +165,7 @@ internal static class ConversionService
 
         int decimals = Math.Max(0, sig - 1 - exponent);
         char fill = mode == RoundingMode.Automatic ? '#' : '0';
-        string format = decimals == 0 ? "#,0" : "#,0." + new string(fill, decimals);
+        string format = decimals == 0 ? integerPart : integerPart + "." + new string(fill, decimals);
         return rounded.ToString(format, culture);
     }
 

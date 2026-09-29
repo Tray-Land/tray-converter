@@ -37,6 +37,13 @@ internal static class SettingsService
         set => Set(nameof(RoundingDigits), Math.Clamp(value, 1, 15));
     }
 
+    /// <summary>Whether copied results keep thousands separators ("1,234.5" vs "1234.5").</summary>
+    public static bool CopyThousandsSeparators
+    {
+        get => Get(nameof(CopyThousandsSeparators), false);
+        set => Set(nameof(CopyThousandsSeparators), value);
+    }
+
     public static string? LastQuantity
     {
         get => Get<string?>(nameof(LastQuantity), null);

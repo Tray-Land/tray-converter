@@ -18,6 +18,7 @@ public sealed partial class FlyoutPage : Page, IDisposable
 {
     private List<Favorite> _favorites = FavoritesService.Load();
     private bool _loading;
+    private double? _lastResult;
 
     public FlyoutPage()
     {
@@ -75,10 +76,12 @@ public sealed partial class FlyoutPage : Page, IDisposable
             return;
         }
 
-        ResultText.Text = ConversionService.ParseInput(InputBox.Text) is { } value
-            && ConversionService.TryConvert(value, from, to) is { } result
-                ? ConversionService.Format(result, SettingsService.Rounding, SettingsService.RoundingDigits)
-                : "--";
+        _lastResult = ConversionService.ParseInput(InputBox.Text) is { } value
+            ? ConversionService.TryConvert(value, from, to)
+            : null;
+        ResultText.Text = _lastResult is { } result
+            ? ConversionService.Format(result, SettingsService.Rounding, SettingsService.RoundingDigits)
+            : "--";
 
         if (!_loading)
         {
@@ -138,13 +141,14 @@ public sealed partial class FlyoutPage : Page, IDisposable
 
     private void CopyButton_Click(object sender, RoutedEventArgs e)
     {
-        if (ResultText.Text == "--")
+        if (_lastResult is not { } result)
         {
             return;
         }
 
         var package = new DataPackage();
-        package.SetText(ResultText.Text);
+        package.SetText(ConversionService.Format(
+            result, SettingsService.Rounding, SettingsService.RoundingDigits, SettingsService.CopyThousandsSeparators));
         Clipboard.SetContent(package);
     }
 

@@ -34,8 +34,17 @@ public sealed partial class SettingsPage : Page
         _loading = true;
         RoundingBox.SelectedIndex = (int)SettingsService.Rounding;
         DigitsBox.Value = SettingsService.RoundingDigits;
+        CopySeparatorsToggle.IsOn = SettingsService.CopyThousandsSeparators;
         ShowRoundingState();
         _loading = false;
+    }
+
+    private void CopySeparatorsToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (!_loading)
+        {
+            SettingsService.CopyThousandsSeparators = CopySeparatorsToggle.IsOn;
+        }
     }
 
     private void ShowRoundingState()

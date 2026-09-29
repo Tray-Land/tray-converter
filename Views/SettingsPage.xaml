@@ -105,6 +105,35 @@
                     </StackPanel>
                 </Border>
 
+                <Grid
+                    Padding="16,12"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    ColumnSpacing="12"
+                    CornerRadius="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Thousands separators when copying" />
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="Copy 1,234.5 instead of 1234.5. The result on screen always shows them."
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ToggleSwitch
+                        x:Name="CopySeparatorsToggle"
+                        Grid.Column="1"
+                        MinWidth="0"
+                        AutomationProperties.Name="Thousands separators when copying"
+                        OffContent=""
+                        OnContent=""
+                        Toggled="CopySeparatorsToggle_Toggled" />
+                </Grid>
+
                 <TextBlock
                     Margin="0,20,0,8"
                     Style="{StaticResource BodyStrongTextBlockStyle}"
