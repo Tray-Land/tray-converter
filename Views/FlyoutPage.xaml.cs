@@ -190,10 +190,21 @@ public sealed partial class FlyoutPage : Page, IDisposable
         CubicBezierEasingFunction ease = compositor.CreateCubicBezierEasingFunction(new(0.3f, 0f), new(0.2f, 1f));
         TimeSpan duration = TimeSpan.FromMilliseconds(600);
 
-        Vector3KeyFrameAnimation offset = compositor.CreateVector3KeyFrameAnimation();
-        offset.Duration = duration;
-        offset.InsertKeyFrame(0f, start - half);
-        offset.InsertKeyFrame(1f, end - half, ease);
+        // An arc: Y travels up steadily while X swings out to the left and back, so the star
+        // follows a bowed path instead of a straight line.
+        const float bow = 90f;
+        ScalarKeyFrameAnimation offsetX = compositor.CreateScalarKeyFrameAnimation();
+        offsetX.Duration = duration;
+        offsetX.InsertKeyFrame(0f, start.X - half.X);
+        offsetX.InsertKeyFrame(0.5f, ((start.X + end.X) / 2) - bow - half.X,
+            compositor.CreateCubicBezierEasingFunction(new(0.2f, 0.6f), new(0.4f, 1f)));
+        offsetX.InsertKeyFrame(1f, end.X - half.X,
+            compositor.CreateCubicBezierEasingFunction(new(0.5f, 0f), new(0.8f, 0.4f)));
+
+        ScalarKeyFrameAnimation offsetY = compositor.CreateScalarKeyFrameAnimation();
+        offsetY.Duration = duration;
+        offsetY.InsertKeyFrame(0f, start.Y - half.Y);
+        offsetY.InsertKeyFrame(1f, end.Y - half.Y, compositor.CreateCubicBezierEasingFunction(new(0.4f, 0f), new(0.3f, 1f)));
 
         Vector3KeyFrameAnimation scale = compositor.CreateVector3KeyFrameAnimation();
         scale.Duration = duration;
@@ -209,7 +220,8 @@ public sealed partial class FlyoutPage : Page, IDisposable
         opacity.InsertKeyFrame(1f, 0f);
 
         CompositionScopedBatch batch = compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-        star.StartAnimation("Offset", offset);
+        star.StartAnimation("Offset.X", offsetX);
+        star.StartAnimation("Offset.Y", offsetY);
         star.StartAnimation("Scale", scale);
         star.StartAnimation("Opacity", opacity);
         batch.End();
