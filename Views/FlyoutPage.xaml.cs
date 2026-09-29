@@ -1,67 +1,210 @@
-using System.Globalization;
-using System.Net.Http;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TinyConverter.Services;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace TinyConverter.Views;
 
 /// <summary>
-/// The flyout's content. Its data refreshes only while the flyout is on screen; see
-/// <see cref="ForegroundPoller"/>.
+/// The converter: quantity, value, from/to units, and a favorites list that jumps straight to a
+/// saved conversion. Everything is local, so there is nothing to poll while hidden.
 /// </summary>
 public sealed partial class FlyoutPage : Page, IDisposable
 {
-    private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(30);
-
-    private readonly ForegroundPoller _poller;
+    private readonly List<Favorite> _favorites = FavoritesService.Load();
+    private bool _loading;
 
     public FlyoutPage()
     {
         InitializeComponent();
         TitleText.Text = App.DisplayName;
-        _poller = new ForegroundPoller(DispatcherQueue, RefreshInterval, RefreshAsync);
-        _poller.Failed += (_, ex) => ShowError(ex);
+
+        _loading = true;
+        QuantityBox.ItemsSource = ConversionService.Quantities;
+        Select(SettingsService.LastQuantity ?? "Length", SettingsService.LastFrom, SettingsService.LastTo);
+        _loading = false;
+
+        RefreshFavorites();
+        Recalculate();
     }
 
-    /// <summary>The flyout opened: refresh if the data is stale and poll until it hides.</summary>
-    public void OnShown() => _poller.Start();
-
-    /// <summary>The flyout hid: stop polling and abandon any request in flight.</summary>
-    public void OnHidden() => _poller.Stop();
-
-    public void Dispose() => _poller.Stop();
-
-    private async Task RefreshAsync(CancellationToken cancellationToken)
+    /// <summary>The flyout opened: ready the input for typing.</summary>
+    public void OnShown()
     {
-        LoadingRing.IsActive = true;
-        try
-        {
-            // Replace with the app's real fetch; pass cancellationToken through to HttpClient.
-            await Task.Delay(TimeSpan.FromMilliseconds(300), cancellationToken);
-            ValueText.Text = DateTime.Now.ToString("t", CultureInfo.CurrentCulture);
-
-            StatusBar.IsOpen = false;
-            UpdatedText.Text = $"Updated {DateTime.Now:t}";
-            App.Current.SetTrayStatus($"Updated {DateTime.Now:t}");
-        }
-        finally
-        {
-            LoadingRing.IsActive = false;
-        }
+        InputBox.Focus(FocusState.Programmatic);
+        InputBox.SelectAll();
     }
 
-    private void ShowError(Exception ex)
+    public void OnHidden()
     {
-        bool online = ConnectivityService.IsInternetAvailable;
-        StatusBar.Title = online ? "Can't reach the service" : "No internet connection";
-        StatusBar.Message = ex is HttpRequestException or TaskCanceledException
-            ? online ? "Retrying shortly." : "This will update when you're back online."
-            : ex.Message;
-        StatusBar.IsOpen = true;
     }
 
-    private void RefreshButton_Click(object sender, RoutedEventArgs e) => _ = _poller.RefreshNowAsync();
+    public void Dispose() => ConversionService.Release();
+
+    private QuantityOption? SelectedQuantity => QuantityBox.SelectedItem as QuantityOption;
+    private UnitOption? From => FromBox.SelectedItem as UnitOption;
+    private UnitOption? To => ToBox.SelectedItem as UnitOption;
+
+    private Favorite? Current => SelectedQuantity is { } q && From is { } f && To is { } t
+        ? new Favorite(q.Name, f.Name, t.Name)
+        : null;
+
+    /// <summary>Selects a quantity and units, falling back to everyday defaults.</summary>
+    private void Select(string quantityName, string? fromName, string? toName)
+    {
+        QuantityOption quantity = ConversionService.FindQuantity(quantityName) ?? ConversionService.Quantities[0];
+        QuantityBox.SelectedItem = quantity;
+        FromBox.ItemsSource = quantity.Units;
+        ToBox.ItemsSource = quantity.Units;
+        var defaults = ConversionService.DefaultUnits(quantity);
+        FromBox.SelectedItem = ConversionService.FindUnit(quantity, fromName) ?? defaults.From;
+        ToBox.SelectedItem = ConversionService.FindUnit(quantity, toName) ?? defaults.To;
+    }
+
+    private void Recalculate()
+    {
+        if (SelectedQuantity is not { } quantity || From is not { } from || To is not { } to)
+        {
+            return;
+        }
+
+        ResultText.Text = ConversionService.ParseInput(InputBox.Text) is { } value
+            && ConversionService.TryConvert(value, from, to) is { } result
+                ? ConversionService.Format(result)
+                : "--";
+
+        if (!_loading)
+        {
+            SettingsService.LastQuantity = quantity.Name;
+            SettingsService.LastFrom = from.Name;
+            SettingsService.LastTo = to.Name;
+        }
+
+        UpdateFavoriteButton();
+    }
+
+    private void UpdateFavoriteButton()
+    {
+        bool isFavorite = Current is { } current && _favorites.Contains(current);
+        FavoriteIcon.Glyph = isFavorite ? "" : "";
+        ToolTipService.SetToolTip(FavoriteButton, isFavorite ? "Remove from favorites" : "Add to favorites");
+    }
+
+    private void RefreshFavorites()
+    {
+        FavoritesList.ItemsSource = _favorites.Select(FavoriteLabel).ToList();
+        FavoritesPanel.Visibility = _favorites.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static string FavoriteLabel(Favorite favorite)
+    {
+        QuantityOption? quantity = ConversionService.FindQuantity(favorite.Quantity);
+        if (quantity is null)
+        {
+            return $"{favorite.Quantity}: {favorite.From} → {favorite.To}";
+        }
+
+        string from = ConversionService.FindUnit(quantity, favorite.From)?.Display ?? favorite.From;
+        string to = ConversionService.FindUnit(quantity, favorite.To)?.Display ?? favorite.To;
+        return $"{quantity.Display}: {from} → {to}";
+    }
+
+    private void SaveFavorites()
+    {
+        FavoritesService.Save(_favorites);
+        RefreshFavorites();
+        UpdateFavoriteButton();
+    }
+
+    private void QuantityBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || SelectedQuantity is not { } quantity)
+        {
+            return;
+        }
+
+        _loading = true;
+        Select(quantity.Name, null, null);
+        _loading = false;
+        Recalculate();
+    }
+
+    private void Unit_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_loading)
+        {
+            Recalculate();
+        }
+    }
+
+    private void InputBox_TextChanged(object sender, TextChangedEventArgs e) => Recalculate();
+
+    private void SwapButton_Click(object sender, RoutedEventArgs e)
+    {
+        object? from = FromBox.SelectedItem;
+        _loading = true;
+        FromBox.SelectedItem = ToBox.SelectedItem;
+        ToBox.SelectedItem = from;
+        _loading = false;
+        Recalculate();
+    }
+
+    private void CopyButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ResultText.Text == "--")
+        {
+            return;
+        }
+
+        var package = new DataPackage();
+        package.SetText(ResultText.Text);
+        Clipboard.SetContent(package);
+    }
+
+    private void FavoriteButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (Current is not { } current)
+        {
+            return;
+        }
+
+        if (!_favorites.Remove(current))
+        {
+            _favorites.Add(current);
+        }
+
+        SaveFavorites();
+    }
+
+    private void FavoritesList_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        int index = FavoritesList.Items.IndexOf(e.ClickedItem);
+        if (index < 0 || index >= _favorites.Count)
+        {
+            return;
+        }
+
+        Favorite favorite = _favorites[index];
+        _loading = true;
+        Select(favorite.Quantity, favorite.From, favorite.To);
+        _loading = false;
+        Recalculate();
+        InputBox.Focus(FocusState.Programmatic);
+        InputBox.SelectAll();
+    }
+
+    private void RemoveFavorite_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string label })
+        {
+            int index = FavoritesList.Items.IndexOf(label);
+            if (index >= 0 && index < _favorites.Count)
+            {
+                _favorites.RemoveAt(index);
+                SaveFavorites();
+            }
+        }
+    }
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e) => App.Current.ShowSettings();
 }

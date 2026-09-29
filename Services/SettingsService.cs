@@ -24,6 +24,24 @@ internal static class SettingsService
         set => Set(nameof(HasLaunchedBefore), value);
     }
 
+    public static string? LastQuantity
+    {
+        get => Get<string?>(nameof(LastQuantity), null);
+        set => Set(nameof(LastQuantity), value);
+    }
+
+    public static string? LastFrom
+    {
+        get => Get<string?>(nameof(LastFrom), null);
+        set => Set(nameof(LastFrom), value);
+    }
+
+    public static string? LastTo
+    {
+        get => Get<string?>(nameof(LastTo), null);
+        set => Set(nameof(LastTo), value);
+    }
+
     public static T? GetJson<T>(string key, JsonTypeInfo<T> typeInfo)
     {
         if (Get<string?>(key, null) is not { } json)

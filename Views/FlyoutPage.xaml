@@ -10,14 +10,12 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!--  Header  -->
         <Grid ColumnSpacing="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock
@@ -26,16 +24,7 @@
                 Style="{StaticResource SubtitleTextBlockStyle}"
                 Text="Tiny Converter" />
             <Button
-                x:Name="RefreshButton"
                 Grid.Column="1"
-                AutomationProperties.Name="Refresh"
-                Click="RefreshButton_Click"
-                Style="{StaticResource FlyoutIconButtonStyle}"
-                ToolTipService.ToolTip="Refresh">
-                <FontIcon FontSize="14" Glyph="&#xE72C;" />
-            </Button>
-            <Button
-                Grid.Column="2"
                 AutomationProperties.Name="Settings"
                 Click="SettingsButton_Click"
                 Style="{StaticResource FlyoutIconButtonStyle}"
@@ -44,48 +33,126 @@
             </Button>
         </Grid>
 
-        <!--  Errors keep the last good content visible underneath  -->
-        <InfoBar
-            x:Name="StatusBar"
-            Grid.Row="1"
-            IsClosable="False"
-            IsOpen="False"
-            Severity="Warning" />
+        <!--  Favorites: click to jump to that conversion  -->
+        <StackPanel x:Name="FavoritesPanel" Grid.Row="1" Spacing="4" Visibility="Collapsed">
+            <TextBlock
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                Text="Favorites" />
+            <ListView
+                x:Name="FavoritesList"
+                MaxHeight="132"
+                IsItemClickEnabled="True"
+                ItemClick="FavoritesList_ItemClick"
+                SelectionMode="None">
+                <ListView.ItemContainerStyle>
+                    <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
+                        <Setter Property="MinHeight" Value="36" />
+                        <Setter Property="Padding" Value="8,0,0,0" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <Grid ColumnSpacing="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Text="{x:Bind}"
+                                TextTrimming="CharacterEllipsis" />
+                            <Button
+                                Grid.Column="1"
+                                AutomationProperties.Name="Remove favorite"
+                                Click="RemoveFavorite_Click"
+                                Style="{StaticResource FlyoutIconButtonStyle}"
+                                Tag="{x:Bind}"
+                                ToolTipService.ToolTip="Remove favorite">
+                                <FontIcon FontSize="12" Glyph="&#xE711;" />
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
 
-        <!--  Content: replace with the app's own view  -->
+        <!--  Converter  -->
         <Border
             Grid.Row="2"
             Padding="16"
+            VerticalAlignment="Top"
             Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
             BorderThickness="1"
             CornerRadius="8">
-            <StackPanel VerticalAlignment="Center" Spacing="4">
-                <TextBlock
-                    x:Name="ValueText"
-                    HorizontalAlignment="Center"
-                    Style="{StaticResource TitleLargeTextBlockStyle}"
-                    Text="--" />
-                <TextBlock
-                    HorizontalAlignment="Center"
-                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="Replace this card with the app's content." />
+            <StackPanel Spacing="10">
+                <ComboBox
+                    x:Name="QuantityBox"
+                    HorizontalAlignment="Stretch"
+                    Header="Quantity"
+                    SelectionChanged="QuantityBox_SelectionChanged" />
+
+                <TextBox
+                    x:Name="InputBox"
+                    Header="Value (math works: 5 * 12)"
+                    PlaceholderText="0"
+                    TextChanged="InputBox_TextChanged" />
+                <ComboBox
+                    x:Name="FromBox"
+                    HorizontalAlignment="Stretch"
+                    AutomationProperties.Name="From unit"
+                    SelectionChanged="Unit_SelectionChanged" />
+
+                <Grid>
+                    <Button
+                        HorizontalAlignment="Center"
+                        AutomationProperties.Name="Swap units"
+                        Click="SwapButton_Click"
+                        Style="{StaticResource FlyoutIconButtonStyle}"
+                        ToolTipService.ToolTip="Swap units">
+                        <FontIcon FontSize="14" Glyph="&#xE174;" />
+                    </Button>
+                </Grid>
+
+                <ComboBox
+                    x:Name="ToBox"
+                    HorizontalAlignment="Stretch"
+                    AutomationProperties.Name="To unit"
+                    SelectionChanged="Unit_SelectionChanged" />
+
+                <Grid ColumnSpacing="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        x:Name="ResultText"
+                        VerticalAlignment="Center"
+                        IsTextSelectionEnabled="True"
+                        Style="{StaticResource TitleTextBlockStyle}"
+                        Text="--"
+                        TextTrimming="CharacterEllipsis" />
+                    <Button
+                        Grid.Column="1"
+                        AutomationProperties.Name="Copy result"
+                        Click="CopyButton_Click"
+                        Style="{StaticResource FlyoutIconButtonStyle}"
+                        ToolTipService.ToolTip="Copy result">
+                        <FontIcon FontSize="14" Glyph="&#xE8C8;" />
+                    </Button>
+                    <Button
+                        x:Name="FavoriteButton"
+                        Grid.Column="2"
+                        AutomationProperties.Name="Toggle favorite"
+                        Click="FavoriteButton_Click"
+                        Style="{StaticResource FlyoutIconButtonStyle}"
+                        ToolTipService.ToolTip="Add to favorites">
+                        <FontIcon x:Name="FavoriteIcon" FontSize="14" Glyph="&#xE734;" />
+                    </Button>
+                </Grid>
             </StackPanel>
         </Border>
-
-        <!--  Footer  -->
-        <Grid Grid.Row="3">
-            <TextBlock
-                x:Name="UpdatedText"
-                VerticalAlignment="Center"
-                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                Style="{StaticResource CaptionTextBlockStyle}" />
-            <ProgressRing
-                x:Name="LoadingRing"
-                Width="16"
-                Height="16"
-                HorizontalAlignment="Right"
-                IsActive="False" />
-        </Grid>
     </Grid>
 </Page>
