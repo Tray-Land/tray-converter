@@ -4,6 +4,10 @@ A unit converter that lives in the Windows system tray. Click the icon, type a v
 
 Built with WinUI 3 and the Windows App SDK.
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="The Tray Converter flyout converting 102 curies to 3,774 gigabecquerels" width="420">
+</p>
+
 ## Features
 
 - **Around 100 quantities.** Length, mass, temperature, volume, speed, pressure, energy, data size, and everything else [UnitsNet](https://github.com/angularsen/UnitsNet) knows about.
