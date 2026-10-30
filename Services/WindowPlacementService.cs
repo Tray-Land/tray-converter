@@ -32,6 +32,7 @@ internal static class WindowPlacementService
     /// and silently degrades to cursor/taskbar placement if the internals change.
     /// </summary>
     [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicFields, typeof(TrayIcon))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.NonPublicFields, "Windows.Win32.Foundation.HWND", "WinUIEx")]
     public static void SetTrayIcon(TrayIcon trayIcon)
     {
         _trayIconId = trayIcon.TrayIconId;
@@ -153,6 +154,8 @@ internal static class WindowPlacementService
 
     private static int ToPhysical(int logical, uint dpi) => (int)Math.Ceiling(logical * dpi / 96.0);
 
+    // The boxed value is WinUIEx's HWND; SetTrayIcon's DynamicDependency keeps its fields.
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "WinUIEx's HWND fields are preserved by the DynamicDependency on SetTrayIcon.")]
     private static nint ReadHandle(object boxed)
     {
         // WinUIEx stores its own CsWin32 HWND struct; read its single pointer-sized field.
