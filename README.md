@@ -20,6 +20,10 @@ Built with WinUI 3 and the Windows App SDK.
 - **Start with Windows.** Optional.
 - **Light on memory.** The flyout is hidden on dismiss and closed after a minute, and the unit catalog is released when idle.
 
+## Install
+
+Download [TrayConverter.appinstaller](https://github.com/Tray-Land/tray-converter/releases/latest/download/TrayConverter.appinstaller) and open it. Windows installs the right version for your PC (x64 or ARM64) and keeps it updated.
+
 ## Requirements
 
 - Windows 10 version 1809 (10.0.17763) or later
@@ -47,10 +51,16 @@ dotnet build -c Debug -p:Platform=$Platform
 
 ### Package a release
 
-`build-msix-for-gh.ps1` builds and signs an MSIX and publishes it as a GitHub release. It needs an authenticated [`gh`](https://cli.github.com/) CLI. Pass `-SkipRelease` to build and sign without tagging.
+`build-msix-for-gh.ps1` builds signed x64 and ARM64 packages, bundles them into an `.msixbundle`, and creates a draft GitHub release with an auto-updating `.appinstaller` feed. It needs an authenticated [`gh`](https://cli.github.com/) CLI. Pass `-SkipRelease` to build without tagging, and add `-NoSign` to check the build without a certificate.
 
 ```powershell
-./build-msix-for-gh.ps1 -SkipRelease
+./build-msix-for-gh.ps1 -SkipRelease -NoSign -OutputRoot $env:TEMP\tray-converter-check
+```
+
+After you publish the draft release (without changing its tag), confirm the feed works:
+
+```powershell
+./build-msix-for-gh.ps1 -VerifyPublished
 ```
 
 ## Project layout
