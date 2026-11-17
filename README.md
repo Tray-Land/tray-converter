@@ -22,6 +22,8 @@ Built with WinUI 3 and the Windows App SDK.
 
 ## Install
 
+[<img src="docs/MSIX.svg" alt="Install TrayConverter (MSIX)" width="212">](https://github.com/Tray-Land/tray-converter/releases/latest/download/TrayConverter.appinstaller)
+
 Download [TrayConverter.appinstaller](https://github.com/Tray-Land/tray-converter/releases/latest/download/TrayConverter.appinstaller) and open it. Windows installs the right version for your PC (x64 or ARM64) and keeps it updated.
 
 ## Requirements
